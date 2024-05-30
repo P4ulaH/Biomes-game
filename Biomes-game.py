@@ -15,11 +15,44 @@ biomes:
 '''
 import tkinter
 import random
-import time
-canvas = tkinter.Canvas(width=700, height=700, bg='white')
-canvas.pack()
 
 
+root = tkinter.Tk()
+root.title('Interactive Story')
+root.geometry('800x700')
+root.resizable(False, False)
+canvas = tkinter.Canvas(root, width=700, height=700, bg='white')
+canvas.pack(side = tkinter.LEFT)
+
+canvas2 = tkinter.Canvas(root, width=100, height=700, bg='white')
+canvas2.pack(side = tkinter.LEFT)
+
+
+#canvas2 slots generating
+def slots(x, y):
+    x = x*100
+    y = y*100
+    canvas2.create_rectangle(x+0, y+0, x+100, y+100, fill='#5D3B22', outline='#4D2D18', width=2)
+    canvas2.create_rectangle(x+7, y+5, x+89, y+95, fill='#8A6240', outline='')
+
+def keyslot(x, y):
+    x = x*100
+    y = y*100
+    canvas2.create_rectangle(x+0, y+0, x+100, y+100, fill='#8F6B00', outline='')
+    canvas2.create_rectangle(x+7, y+7, x+89, y+95, fill='#BD9110', outline='')
+    canvas2.create_oval(x+35, y+20, x+65, y+50, fill='', outline='#a67c00', width=10)
+    canvas2.create_rectangle(x+45, y+50, x+55, y+90, fill='#a67c00', outline='')
+    canvas2.create_rectangle(x+35, y+82, x+50, y+90, fill='#a67c00', outline='')
+    canvas2.create_rectangle(x+35, y+65, x+50, y+73, fill='#a67c00', outline='')
+
+keyslot(0, 0)
+s = 0
+for i in range(7):
+    s += 1
+    slots(0, s)
+   
+
+#functions for biomes
 def meadow(x, y):
     x = x*100
     y = y*100
@@ -133,9 +166,11 @@ def outline(x, y):
     return canvas.create_rectangle(x+0, y+0, x+100, y+100, fill='', outline='black', width=2)
 
 
+#lists
 inventory = []
 biomes = [meadow, forest, desert, ocean, mountain]
 
+#Classes
 class Biome:
     
     def __init__(self, x, y, biome):
@@ -152,6 +187,9 @@ class Biome:
         
     def unlock(self):
         self.locked = False
+        
+        findAndEat(inventory)
+        
         canvas.delete(self.b1)
         
         
@@ -164,12 +202,62 @@ class Key:
     def remove(self):
         canvas.delete(self.p1, self.p2, self.p3, self.p4)
         
-    def create(self):
+    def create(self, canvas=canvas):
         self.p1 = canvas.create_oval(self.x+35, self.y+20, self.x+65, self.y+50, fill='', outline='gold', width=10)
         self.p2 = canvas.create_rectangle(self.x+45, self.y+50, self.x+55, self.y+90, fill='gold', outline='')
         self.p3 = canvas.create_rectangle(self.x+35, self.y+82, self.x+50, self.y+90, fill='gold', outline='')
         self.p4 = canvas.create_rectangle(self.x+35, self.y+65, self.x+50, self.y+73, fill='gold', outline='')
+        
+    def add_to_inventory(self, unused):
+        slot = 0
+        self.i1 = canvas2.create_oval(35, slot+20, 65, slot+50, fill='', outline='gold', width=10)
+        self.i2 = canvas2.create_rectangle(45, slot+50, 55, slot+90, fill='gold', outline='')
+        self.i3 = canvas2.create_rectangle(35, slot+82, 50, slot+90, fill='gold', outline='')
+        self.i4 = canvas2.create_rectangle(35, slot+65, 50, slot+73, fill='gold', outline='')
+        
+    def remove_from_inventory(self):  
+        canvas2.delete(self.i1, self.i2, self.i3, self.i4)
     
+class Apple:
+    def __init__(self, x, y):
+        self.x = x*100
+        self.y = y*100
+        
+    def remove(self):
+        canvas.delete(self.p1)
+        
+    def create(self,canvas=canvas):
+        self.p1 = canvas.create_oval(self.x+35, self.y+35, self.x+65, self.y+65, fill='red', outline='black')
+    
+    def add_to_inventory(self, slot):
+        slot = slot*100
+        self.i1 = canvas2.create_oval(35, slot+35, 65, slot+65, fill='red', outline='black')
+        
+    def remove_from_inventory(self):
+        canvas2.delete(self.i1)
+        
+hunger = 2
+
+def findAndEat(inv):
+    global hunger
+    inv2 = inv.copy()
+    inv2.reverse()
+    
+    if hunger == 0:
+        for item in inv2:
+            if item.__class__.__name__ == 'Apple':
+                item.remove_from_inventory()
+                inv.remove(item)
+                hunger = 2
+                return
+    else:
+        hunger -= 1
+            
+def checkForApple(inv):
+    for item in inv:
+        if item.__class__.__name__ == 'Apple':
+            return True
+    return False
 
 
 startY = 0
@@ -183,35 +271,59 @@ keyX = random.randint(1, 6)
 
 locations = []
 
-#generating biomes
-for x in range(7):
-  ylist = []
-  for y in range(7):
-    if(x == startX and y == startY):
-        b = Biome(x, y, start)
-    elif(x == enddX and y == enddY):
-        b = Biome(x, y, end)
-        b.lock()
-    else:
-        rand_biomes = random.choice(biomes)
-        b = Biome(x, y, rand_biomes)
-        if x == keyX and y == keyY:
-            global key
-            key = Key(x, y)
-            key.create()
-            b.items.append(key)
-            print(x, y)
-        b.lock()
+#generating biomes, key and items
+def generate():
+    
+    global keyX
+    global keyY
+    for x in range(7):
+        ylist = []
+        for y in range(7):
+            if(x == startX and y == startY):
+                b = Biome(x, y, start)
+            elif(x == enddX and y == enddY):
+                if x == keyX and y == keyY:
+                    keyY = random.randint(1, 6)
+                    keyX = random.randint(1, 6)
+                b = Biome(x, y, end)
+                b.lock()
+            else:
+                rand_biomes = random.choice(biomes)
+                b = Biome(x, y, rand_biomes)
+                
+                if x == keyX and y == keyY:
+                    global key
+                    key = Key(x, y)
+                    key.create()
+                    b.items.append(key)
+                else:
+                    if rand_biomes == meadow or rand_biomes == forest:
+                        if random.randint(0, 100) > 20:
+                            appel = Apple(x, y)
+                            b.items.append(appel)
+                            appel.create()   
+                
+                    
+                b.lock()
 
-    ylist.append(b)
+            ylist.append(b)
 
-  locations.append(ylist) 
+        locations.append(ylist) 
 
   
 xx = 0
 yy = 0
 
-outlinevar = outline(xx, yy)
+haveKey = False
+
+outlinevar = outline(xx, yy) 
+
+def giveStartApples(number):
+    for i in range(number):
+        appel = Apple(0, 0)
+        inventory.append(appel)
+        appel.add_to_inventory(len(inventory))
+        
 
 def collect(event):
     global locations
@@ -221,31 +333,44 @@ def collect(event):
     global enddY
     global xx
     global yy
+    global haveKey
     
     for item in locations[xx][yy].items:
-        inventory.append(item)
+        
+        
+        if item.__class__.__name__ == 'Apple':
+            inventory.append(item)
+            item.add_to_inventory(len(inventory))
+            
+        elif item.__class__.__name__ == 'Key':
+            item.add_to_inventory("unused")
+            haveKey = True
+        
         item.remove()
         locations[xx][yy].items.remove(item)
-        print("item: ",item)
+        
     
     
     if xx == enddX and yy == enddY:
-        print("end")
-        if key in inventory:
+        
+        if haveKey:
             locations[enddX][enddY].unlock()
-            print('You win!')
+            
             exit()
 
-  
+
+
+#moving
 def moveRight(event):
     global xx
     if(xx >= 0) and (xx < 6):
         xx += 1
-        if locations[xx][yy].locked == True:
-            locations[xx][yy].unlock() 
         
-        print(xx, yy)
-        print(locations[xx][yy].items)
+        if locations[xx][yy].locked == True:
+            if checkForApple(inventory) == True:
+                locations[xx][yy].unlock()
+            else:
+                xx -= 1
 
         global outlinevar
         canvas.delete(outlinevar)
@@ -255,11 +380,12 @@ def moveLeft(event):
     global xx
     if(xx > 0) and (xx < 7):
         xx -= 1
-        if locations[xx][yy].locked == True:
-            locations[xx][yy].unlock() 
         
-        print(xx, yy)
-        print(locations[xx][yy].items)
+        if locations[xx][yy].locked == True:
+            if checkForApple(inventory) == True:
+                locations[xx][yy].unlock()
+            else:
+                xx += 1
         
         global outlinevar
         canvas.delete(outlinevar)
@@ -269,12 +395,12 @@ def moveUp(event):
     global yy
     if(yy > 0) and (yy < 7):
         yy -= 1
-        if locations[xx][yy].locked == True:
-            locations[xx][yy].unlock() 
         
-        print(xx, yy)
-        print(locations[xx][yy].items)
-
+        if locations[xx][yy].locked == True:
+            if checkForApple(inventory) == True:
+                locations[xx][yy].unlock()
+            else:
+                yy += 1
         
         global outlinevar
         canvas.delete(outlinevar)
@@ -284,17 +410,20 @@ def moveDown(event):
     global yy
     if(yy >= 0) and (yy < 6):
         yy += 1
+        
         if locations[xx][yy].locked == True:
-            locations[xx][yy].unlock() 
-        
-        print(xx, yy)
-        print(locations[xx][yy].items)
-        
+            if checkForApple(inventory) == True:
+                locations[xx][yy].unlock()
+            else:
+                yy -= 1
         
         global outlinevar
         canvas.delete(outlinevar)
         outlinevar = outline(xx, yy)
   
+  
+generate()
+giveStartApples(3)
 
 canvas.bind_all('<KeyPress-Right>', moveRight)
 canvas.bind_all('<KeyPress-Left>', moveLeft)
@@ -302,6 +431,7 @@ canvas.bind_all('<KeyPress-Up>', moveUp)
 canvas.bind_all('<KeyPress-Down>', moveDown)
 canvas.bind_all('<KeyPress-Return>', collect)
 
-     
+
+  
     
 canvas.mainloop()
