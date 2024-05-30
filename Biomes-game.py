@@ -1,4 +1,6 @@
 '''
+verzia kde som v piatok skončila so šimonom
+
 story idea:
 - you can move south, east, or west
 - where you move you generate a biome
@@ -17,6 +19,9 @@ import tkinter
 import random
 canvas = tkinter.Canvas(width=700, height=740, bg='white')
 canvas.pack()
+
+
+
 
 def meadow(x, y):
     x = x*100
@@ -119,87 +124,64 @@ def end(x, y):
     canvas.create_rectangle(x+20, y+20, x+80, y+80, fill='#1a3e5f', outline='')
     canvas.create_rectangle(x+30, y+30, x+70, y+70, fill='#0a1e2f', outline='')
     canvas.create_rectangle(x+40, y+40, x+60, y+60, fill='#000c17', outline='') 
+
+    
+def blank(x, y):
+    x = x*100
+    y = y*100
+    return canvas.create_rectangle(x+0, y+0, x+100, y+100, fill='white', outline='white')
+    
+biomes = [meadow, forest, desert, ocean, mountain]
+
+locations = []
+    
+class Biome:
+    def __init__(self, x, y, biome, lock = False):
+        self.x = x
+        self.y = y
+        self.biome = biome
+        self.biome(x, y)
+        self.b1 = blank(x, y)
+        
+        if(lock == True):
+            self.locked = True
+        else:
+            self.locked = False
+            canvas.delete(self.b1)
+    def unlock(self):
+        self.locked = False
+        canvas.delete(self.b1)
     
 
-biomes = [meadow, forest, desert, ocean, mountain, start, end]
-locked = []
+
+
 
 startY = 0
 startX = 0
-
 
 enddY = random.randint(1, 6)
 enddX = random.randint(1, 6)
 
 
 
-
-#old mechanic for ramdomly generating biomes, end and start covering some biomes
-'''for x in range(7):
-    for y in range(7):
-        biomes[random.randint(0, 4)](x, y)
-
-biomes[5](startX, startY)
-biomes[6](enddX, enddY)'''
         
 #generate end and start, if there isn't start/end already generate biome
 for x in range(7):
     for y in range(7):
         if(x == startX and y == startY):
-            start(x, y)
+            b = Biome(x, y, start, False)
+            locations.append(b)
         elif(x == enddX and y == enddY):
-            end(x, y)
+            b = Biome(x, y, end, True)
+            locations.append(b)
         else:
-            biomes[random.randint(0, 4)](x, y)
-            
-            #x = x*100
-            #y = y*100
-            #gg = canvas.create_rectangle(x+0, y+0, x+100, y+100, fill='white', outline='white')
-            #locked.append(gg)
+            b = Biome(x, y, random.choice(biomes), True)
+            locations.append(b)
     
             
     
-
-#where you move you generate a biome, sometimes it bugs and you just can't move        
-'''
-x = 0
-y = 0
-
-biomes[random.randint(0, 4)](x, y)
-
-def moveright(event):
-    global x
-    if(x >= 0) and (x < 7):
-        x += 1
-        biomes[random.randint(0, 4)](x, y)
-    
-def moveleft(event):
-    global x
-    if(x > 0) and (x < 7):
-        x -= 1
-        biomes[random.randint(0, 4)](x, y)
-    
-def moveup(event):
-    global y
-    if(y > 0) and (y < 6):
-        y -= 1
-        biomes[random.randint(0, 4)](x, y)
-
-def movedown(event):
-    global y
-    if(y >= 0) and (y < 6):
-        y += 1
-        biomes[random.randint(0, 4)](x, y)
-
-canvas.bind_all('<KeyPress-Right>', moveright)
-canvas.bind_all('<KeyPress-Left>', moveleft)
-canvas.bind_all('<KeyPress-Up>', moveup)
-canvas.bind_all('<KeyPress-Down>', movedown)
-'''
-
+locations[random.randint(1, 48)].unlock()
         
-    
-
-
+        
     
 canvas.mainloop()
