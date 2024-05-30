@@ -1,6 +1,6 @@
 '''
 story idea:
-- you can move south, east, or west
+- you can move right, left, up or down
 - where you move you generate a biome
 - biomes have different items in them
 - you can pick them up
@@ -12,10 +12,14 @@ biomes:
 - ocean
 - mountain
 
+items:
+- key
+- apple
+
 '''
 import tkinter
 import random
-
+from PIL import Image, ImageTk
 
 root = tkinter.Tk()
 root.title('Interactive Story')
@@ -27,6 +31,7 @@ canvas.pack(side = tkinter.LEFT)
 canvas2 = tkinter.Canvas(root, width=100, height=700, bg='white')
 canvas2.pack(side = tkinter.LEFT)
 
+print("rules: \n- you can move right, left, up or down with the arrow buttons\n- where you move you generate a biome\n- you can pick up apples and key with the enter button\n- in meadow and forest there is an 80% chance of an apple spawning\n- after you move 2 biomes you eat an apple, once you don't have any apples you can't explore new biomes\n- the goal is to find a key and end, you end the game by clicking enter on the end biome with key in your inventory\n\nbiomes:\n- meadow\n- forest\n- desert\n- ocean\n- mountain\n\nitems:\n- key\n- apple\n\n")
 
 #canvas2 slots generating
 def slots(x, y):
@@ -227,11 +232,20 @@ class Apple:
         canvas.delete(self.p1)
         
     def create(self,canvas=canvas):
-        self.p1 = canvas.create_oval(self.x+35, self.y+35, self.x+65, self.y+65, fill='red', outline='black')
+        img = Image.open("c:\\Users\\Paula Hennelová\\OneDrive - sos-it.sk\\2-MOJE (programovanie)\\PYTHON\\interactive story\\apple.png")
+        img = img.resize((100, 100), Image.LANCZOS)
+        self.image = ImageTk.PhotoImage(img)
+        
+        self.p1 = canvas.create_image(self.x+50, self.y+50, anchor=tkinter.CENTER, image=self.image)
     
     def add_to_inventory(self, slot):
         slot = slot*100
-        self.i1 = canvas2.create_oval(35, slot+35, 65, slot+65, fill='red', outline='black')
+        
+        img = Image.open("c:\\Users\\Paula Hennelová\\OneDrive - sos-it.sk\\2-MOJE (programovanie)\\PYTHON\\interactive story\\apple.png")
+        img = img.resize((100, 100), Image.LANCZOS)
+        self.image = ImageTk.PhotoImage(img)
+        
+        self.i1 = canvas2.create_image(50, slot+50, anchor=tkinter.CENTER, image=self.image)
         
     def remove_from_inventory(self):
         canvas2.delete(self.i1)
@@ -282,7 +296,7 @@ def generate():
             if(x == startX and y == startY):
                 b = Biome(x, y, start)
             elif(x == enddX and y == enddY):
-                if x == keyX and y == keyY:
+                while x == keyX and y == keyY:
                     keyY = random.randint(1, 6)
                     keyX = random.randint(1, 6)
                 b = Biome(x, y, end)
@@ -349,7 +363,6 @@ def collect(event):
         item.remove()
         locations[xx][yy].items.remove(item)
         
-    
     
     if xx == enddX and yy == enddY:
         
@@ -425,6 +438,7 @@ def moveDown(event):
 generate()
 giveStartApples(3)
 
+
 canvas.bind_all('<KeyPress-Right>', moveRight)
 canvas.bind_all('<KeyPress-Left>', moveLeft)
 canvas.bind_all('<KeyPress-Up>', moveUp)
@@ -432,6 +446,5 @@ canvas.bind_all('<KeyPress-Down>', moveDown)
 canvas.bind_all('<KeyPress-Return>', collect)
 
 
-  
     
 canvas.mainloop()
