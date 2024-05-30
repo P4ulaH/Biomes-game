@@ -1,6 +1,4 @@
 '''
-verzia kde som v piatok skončila so šimonom
-
 story idea:
 - you can move south, east, or west
 - where you move you generate a biome
@@ -17,10 +15,8 @@ biomes:
 '''
 import tkinter
 import random
-canvas = tkinter.Canvas(width=700, height=740, bg='white')
+canvas = tkinter.Canvas(width=700, height=700, bg='white')
 canvas.pack()
-
-
 
 
 def meadow(x, y):
@@ -125,35 +121,158 @@ def end(x, y):
     canvas.create_rectangle(x+30, y+30, x+70, y+70, fill='#0a1e2f', outline='')
     canvas.create_rectangle(x+40, y+40, x+60, y+60, fill='#000c17', outline='') 
 
-    
 def blank(x, y):
     x = x*100
     y = y*100
     return canvas.create_rectangle(x+0, y+0, x+100, y+100, fill='white', outline='white')
-    
+
+def outline(x, y):
+    x = x*100
+    y = y*100
+    return canvas.create_rectangle(x+0, y+0, x+100, y+100, fill='', outline='black', width=2)
+
+
+
+
 biomes = [meadow, forest, desert, ocean, mountain]
 
-locations = []
-    
 class Biome:
-    def __init__(self, x, y, biome, lock = False):
+    
+    def __init__(self, x, y, biome):
         self.x = x
         self.y = y
         self.biome = biome
         self.biome(x, y)
-        self.b1 = blank(x, y)
+        self.items = []
+        self.locked = False
+       
+    def lock(self):
+        self.locked = True
+        self.b1 = blank(self.x, self.y)
         
-        if(lock == True):
-            self.locked = True
-        else:
-            self.locked = False
-            canvas.delete(self.b1)
     def unlock(self):
         self.locked = False
         canvas.delete(self.b1)
+        
+  
+        
+class Key:
+    def __init__(self, x, y):
+        self.x = x*100
+        self.y = y*100
+        
+        
+    def remove(self):
+        canvas.delete(self.p1, self.p2, self.p3, self.p4)
+        
+    def create(self):
+        self.p1 = canvas.create_oval(self.x+35, self.y+20, self.x+65, self.y+50, fill='', outline='gold', width=10)
+        self.p2 = canvas.create_rectangle(self.x+45, self.y+50, self.x+55, self.y+90, fill='gold', outline='')
+        self.p3 = canvas.create_rectangle(self.x+35, self.y+82, self.x+50, self.y+90, fill='gold', outline='')
+        self.p4 = canvas.create_rectangle(self.x+35, self.y+65, self.x+50, self.y+73, fill='gold', outline='')
     
 
+startY = 0
+startX = 0
 
+enddY = random.randint(1, 6)
+enddX = random.randint(1, 6)
+
+keyY = random.randint(1, 6)
+keyX = random.randint(1, 6)
+
+locations = []
+
+
+for x in range(7):
+  ylist = []
+  for y in range(7):
+    if(x == startX and y == startY):
+        b = Biome(x, y, start)
+    elif(x == enddX and y == enddY):
+        b = Biome(x, y, end)
+        b.lock()
+    else:
+        rand_biomes = random.choice(biomes)
+        b = Biome(x, y, rand_biomes)
+        if x == keyX and y == keyY:
+            k = Key(x, y)
+            k.create()
+            b.items.append(k)
+            print(x, y)
+        b.lock()
+
+    ylist.append(b)
+
+  locations.append(ylist) 
+
+
+  
+xx = 0
+yy = 0
+
+outlinevar = outline(xx, yy)
+  
+def moveRight(event):
+    global xx
+    if(xx >= 0) and (xx < 6):
+        xx += 1
+        locations[xx][yy].unlock()
+        
+        print(xx, yy)
+        print(locations[xx][yy].items)
+        
+
+        global outlinevar
+        canvas.delete(outlinevar)
+        outlinevar = outline(xx, yy)
+        
+def moveLeft(event):
+    global xx
+    if(xx > 0) and (xx < 7):
+        xx -= 1
+        locations[xx][yy].unlock()
+        
+        print(xx, yy)
+        print(locations[xx][yy].items)
+        
+        global outlinevar
+        canvas.delete(outlinevar)
+        outlinevar = outline(xx, yy)
+
+def moveUp(event):
+    global yy
+    if(yy > 0) and (yy < 7):
+        yy -= 1
+        locations[xx][yy].unlock()
+        
+        print(xx, yy)
+        print(locations[xx][yy].items)
+        
+        global outlinevar
+        canvas.delete(outlinevar)
+        outlinevar = outline(xx, yy)
+
+def moveDown(event):
+    global yy
+    if(yy >= 0) and (yy < 6):
+        yy += 1
+        locations[xx][yy].unlock()
+        
+        print(xx, yy)
+        print(locations[xx][yy].items)
+
+        global outlinevar
+        canvas.delete(outlinevar)
+        outlinevar = outline(xx, yy)
+  
+
+canvas.bind_all('<KeyPress-Right>', moveRight)
+canvas.bind_all('<KeyPress-Left>', moveLeft)
+canvas.bind_all('<KeyPress-Up>', moveUp)
+canvas.bind_all('<KeyPress-Down>', moveDown)
+
+#locations[xx][yy].unlock()
 
 
 startY = 0
@@ -162,26 +281,6 @@ startX = 0
 enddY = random.randint(1, 6)
 enddX = random.randint(1, 6)
 
-
-
-        
-#generate end and start, if there isn't start/end already generate biome
-for x in range(7):
-    for y in range(7):
-        if(x == startX and y == startY):
-            b = Biome(x, y, start, False)
-            locations.append(b)
-        elif(x == enddX and y == enddY):
-            b = Biome(x, y, end, True)
-            locations.append(b)
-        else:
-            b = Biome(x, y, random.choice(biomes), True)
-            locations.append(b)
-    
-            
-    
-locations[random.randint(1, 48)].unlock()
-        
         
     
 canvas.mainloop()
